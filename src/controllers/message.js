@@ -6,7 +6,7 @@ import { client } from '../routes/routes.js'
 import { MessageMedia } from 'whatsapp-web.js'
 
 export const sendFile = async (req, res) => {
-  const { phone, caption } = req.query
+  const { phone, caption, name_pdf } = req.query
 
   if (!phone) {
     return res.status(400).json({ error: 'Faltan parámetros: phone y caption' })
@@ -17,11 +17,11 @@ export const sendFile = async (req, res) => {
     const formattedNumber = phone.includes('@c.us') ? phone : `593${phone}@c.us`
 
     // Obtener la ruta del archivo
-    const __filename = fileURLToPath(import.meta.url)
-    const __dirname = dirname(__filename)
+    // const __filename = fileURLToPath(import.meta.url)
+    // const __dirname = dirname(__filename)
 
     // Ruta del archivo
-    const filePath = join(__dirname, '/test2.pdf')
+    const filePath = join('/pdfdocs', name_pdf)
 
     // Leer el archivo
     const fileBuffer = readFileSync(filePath)
