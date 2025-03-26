@@ -1,16 +1,19 @@
-import { join } from 'path'
+
 import { readFileSync } from 'fs'
 import mime from 'mime-types'
 import { client } from '../routes/routes.js'
 import pkg from 'whatsapp-web.js';
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
 const { MessageMedia } = pkg;
 
 
 export const sendFile = async (req, res) => {
-  const { phone, caption, name_pdf } = req.query
+  // const { phone, caption, name_pdf } = req.query
+  const { phone, caption, name_pdf } = req.body;
 
-  if (!phone) {
-    return res.status(400).json({ error: 'Faltan parámetros: phone y caption' })
+  if (!phone || !name_pdf) {
+    return res.status(400).json({ error: 'Faltan parámetros: phone y name pdf' })
   }
 
   try {
@@ -18,11 +21,11 @@ export const sendFile = async (req, res) => {
     const formattedNumber = phone.includes('@c.us') ? phone : `593${phone}@c.us`
 
     // Obtener la ruta del archivo
-    // const __filename = fileURLToPath(import.meta.url)
-    // const __dirname = dirname(__filename)
+    const __filename = fileURLToPath(import.meta.url)
+    const __dirname = dirname(__filename)
 
     // Ruta del archivo
-    const filePath = join('/docpdf', name_pdf)
+    const filePath =  process.env.NODE_ENV === 'production' ? join('/docpdf', name_pdf) : join(__dirname, '/test2.pdf')
     // const filePath = '/docpdf/' + name_pdf;
 
     // Imprimir la ruta completa del archivo
