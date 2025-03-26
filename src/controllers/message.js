@@ -25,6 +25,9 @@ export const sendFile = async (req, res) => {
     // Ruta del archivo
     const filePath = join('/pdfdocs', name_pdf)
 
+    // Imprimir la ruta completa del archivo
+    console.log('Ruta completa del archivo:', filePath)
+
     // Leer el archivo
     const fileBuffer = readFileSync(filePath)
 
