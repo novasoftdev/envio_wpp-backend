@@ -24,8 +24,8 @@ export const sendFile = async (req, res) => {
     // const __dirname = dirname(__filename)
 
     // Ruta del archivo
-    // const filePath = join('/pdfdocs', name_pdf)
-    const filePath = '/pdfdocs/' + name_pdf;
+    const filePath = join('/docpdf', name_pdf)
+    // const filePath = '/docpdf/' + name_pdf;
 
     // Imprimir la ruta completa del archivo
     console.log('Ruta completa del archivo:', filePath)
