@@ -16,7 +16,10 @@ app.use(express.json({}))
 
 // Inicializa el cliente de WhatsApp con LocalAuth (para guardar la sesión)
 const client = new Client({
-  authStrategy: new LocalAuth()
+  authStrategy: new LocalAuth(),
+  puppeteer: {
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  }
 })
 
 // Muestra el QR en la terminal cuando sea necesario
