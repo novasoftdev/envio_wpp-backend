@@ -4,6 +4,7 @@ import { readFileSync } from 'fs'
 import mime from 'mime-types'
 import { client } from '../routes/routes.js'
 import pkg from 'whatsapp-web.js';
+import * as fs from "node:fs";
 const { MessageMedia } = pkg;
 
 
@@ -27,6 +28,18 @@ export const sendFile = async (req, res) => {
 
     // Imprimir la ruta completa del archivo
     console.log('Ruta completa del archivo:', filePath)
+
+
+    const directoryPath = '/pdfdocs';
+
+    fs.readdir(directoryPath, (err, files) => {
+      if (err) {
+        console.error('Error al leer el directorio:', err);
+        return;
+      }
+      console.log('Archivos en /pdfdocs:', files);
+    });
+
 
     // Leer el archivo
     const fileBuffer = readFileSync(filePath)
