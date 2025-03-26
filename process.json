@@ -2,7 +2,7 @@
   "apps": [
     {
       "name": "whatsapp",
-      "script": "../src/routes/routes.js",
+      "script": "src/routes/routes.js",
       "instances": "max",
       "exec_mode": "cluster",
       "max_memory_restart": "300M",

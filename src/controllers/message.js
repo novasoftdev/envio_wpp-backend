@@ -1,9 +1,11 @@
-import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
+
+import { join } from 'path'
 import { readFileSync } from 'fs'
 import mime from 'mime-types'
 import { client } from '../routes/routes.js'
-import { MessageMedia } from 'whatsapp-web.js'
+import pkg from 'whatsapp-web.js';
+const { MessageMedia } = pkg;
+
 
 export const sendFile = async (req, res) => {
   const { phone, caption, name_pdf } = req.query
