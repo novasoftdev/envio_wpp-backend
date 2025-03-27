@@ -1,16 +1,25 @@
 
 import { readFileSync } from 'fs'
 import mime from 'mime-types'
-import { client } from '../routes/routes.js'
+import { clients } from '../routes/routes.js'
 import pkg from 'whatsapp-web.js';
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import {getClientById} from "../utils.js";
 const { MessageMedia } = pkg;
 
 
 export const sendFile = async (req, res) => {
   // const { phone, caption, name_pdf } = req.query
-  const { phone, caption, name_pdf } = req.body;
+  const { phone, caption, name_pdf, id } = req.body;
+
+    // Obtener el cliente de WhatsApp, cuando client.authStrategy.clientId === id
+    const client = getClientById(id)
+
+    // validar que el cliente esta logueado
+    if (!client) {
+        return res.status(400).json({ error: 'Cliente no logueado' })
+    }
 
   if (!phone || !name_pdf) {
     return res.status(400).json({ error: 'Faltan parámetros: phone y name pdf' })
@@ -25,7 +34,7 @@ export const sendFile = async (req, res) => {
     const __dirname = dirname(__filename)
 
     // Ruta del archivo
-    const filePath =  process.env.NODE_ENV === 'production' ? join('/docpdf', name_pdf) : join(__dirname, '/test2.pdf')
+    const filePath =  process.env.NODE_ENV === 'production' ? join('/docpdf', name_pdf) : join(__dirname, '../test2.pdf')
     // const filePath = '/docpdf/' + name_pdf;
 
     // Imprimir la ruta completa del archivo
@@ -63,13 +72,15 @@ export const sendFile = async (req, res) => {
     res.json({ success: true, message: 'Archivo enviado correctamente' })
   } catch (error) {
     console.error('❌ Error enviando el archivo:', error)
-    res.status(500).json({ error: 'Error enviando el archivo' })
+    res.status(500).json({ error: 'Error enviando el archivo', message: error.message })
   }
 }
 
 export const sendMessage = async (req, res) => {
-  const { phone, message } = req.query
+  const { phone, message, id } = req.query
 
+    // Obtener el cliente de WhatsApp
+    const client = clients[id]
   // Validar que los parámetros existan
   if (!phone || !message) {
     return res.status(400).json({ error: 'Faltan parámetros: phone y message' })

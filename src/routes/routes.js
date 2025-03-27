@@ -14,27 +14,36 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cors())
 app.use(express.json({}))
 
-// Inicializa el cliente de WhatsApp con LocalAuth (para guardar la sesión)
-const client = new Client({
-  authStrategy: new LocalAuth(),
-  puppeteer: {
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  }
-})
+// Crear clientes para múltiples números
+const clients = {
+  num1: new Client({
+    authStrategy: new LocalAuth({ clientId: "numero_1" }),
+    puppeteer: { args: ['--no-sandbox', '--disable-setuid-sandbox'] }
+  }),
+  num2: new Client({
+    authStrategy: new LocalAuth({ clientId: "numero_2" }),
+    puppeteer: { args: ['--no-sandbox', '--disable-setuid-sandbox'] }
+  }),
+  // num3: new Client({
+  //   authStrategy: new LocalAuth({ clientId: "numero_3" }),
+  //   puppeteer: { args: ['--no-sandbox', '--disable-setuid-sandbox'] }
+  // })
+};
 
-// Muestra el QR en la terminal cuando sea necesario
-client.on('qr', qr => {
-  console.log('Escanea este QR con tu WhatsApp:')
-  qrcode.generate(qr, { small: true })
-})
 
-// Mensaje cuando el cliente está listo
-client.on('ready', () => {
-  console.log('✅ Cliente de WhatsApp listo!')
-})
 
-// Inicializa el cliente de WhatsApp
-client.initialize().then()
+// Iniciar clientes
+Object.values(clients).forEach(client => {
+  client.on('qr', (qr) =>{
+    console.log(`Escanea este QR con tu WhatsApp  ${client.authStrategy.clientId}!:`)
+    qrcode.generate(qr, { small: true })
+    console.log('\n\n\n\n\n')
+  });
+  client.on('ready', () => console.log(`Cliente listo: ${client.authStrategy.clientId}`));
+  client.initialize();
+});
+
+
 
 app.use(`/${address}/message`, message)
 
@@ -44,4 +53,4 @@ app.listen(port, () => {
 })
 
 // export client
-export { client }
+export { clients }
