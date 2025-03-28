@@ -26,3 +26,15 @@ export const updateQrCode = async (CODIGO_QR, ID) => {
         throw e;
     }
 }
+
+//update ESTADO and LOG
+export const updateEstado = async (ESTADO, LOG, ID) => {
+    try{
+        const query = `UPDATE STOCK.ST_WPP_PARAMETROS SET ESTADO = :ESTADO, LOG = :LOG WHERE ID = :ID`
+
+        const result = await simpleExecute(query, {ESTADO, LOG, ID}, opts)
+        return result
+    } catch (e) {
+        throw e;
+    }
+}

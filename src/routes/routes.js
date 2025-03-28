@@ -6,7 +6,7 @@ import qrImage from 'qrcode'
 import cors from 'cors'
 
 import { message } from './message.js'
-import {selectWppParametros, updateQrCode} from "../models/wpp_parametros.js";
+import {selectWppParametros, updateEstado, updateQrCode} from "../models/wpp_parametros.js";
 import * as path from "node:path";
 import * as fs from "node:fs";
 import {initialize} from "../configuration/database/database_methods.js";
@@ -100,15 +100,20 @@ async function initializeClients() {
       clients[clientId].on('qr', async (qr) => {
         console.log(`Escanea este QR con tu WhatsApp (${cliente.TELEFONO} - ${clientId}):`)
         const qrBuffer = await qrImage.toBuffer(qr)
+        await updateEstado(0, `ESPERANDO QR`, clientId)
         await updateQrCode(qrBuffer, clientId)
         qrcode.generate(qr, {small: true})
       })
 
-      clients[clientId].on('ready', () => console.log(`✅ Cliente listo: ${cliente.TELEFONO} (${clientId})`))
+      clients[clientId].on('ready', async () => {
+        console.log(`✅ Cliente listo: ${cliente.TELEFONO} (${clientId})`)
+        await updateEstado(1, `LISTO`, clientId)
+      })
 
 
-      clients[clientId].on('disconnected', (reason) => {
+      clients[clientId].on('disconnected', async (reason) => {
         console.log(`❌ Cliente desconectado (${clientId}): ${reason}`)
+        await updateEstado(3, `DESCONECTADO, ${reason}`, clientId)
         handleClientDisconnected(clientId) // Manejar la desconexión
       })
 
