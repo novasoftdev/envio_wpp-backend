@@ -1,6 +1,9 @@
 # IntelliJ
 .idea/
 
+# Se ignora lo siguiente ya que va la cadena de conexión de la base
+src/configuration/database/pool_conections.js
+
 # Cache y autenticación de whatsapp-web.js
 .wwebjs_auth/
 .wwebjs_cache/

@@ -11,10 +11,13 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@types/oracledb": "^6.5.4",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "fs": "^0.0.1-security",
     "mime-types": "^2.1.35",
+    "oracledb": "6.0.1",
+    "qrcode": "^1.5.4",
     "qrcode-terminal": "^0.12.0",
     "standard": "^17.1.2",
     "whatsapp-web.js": "^1.26.0"
