@@ -2,14 +2,12 @@ import express from 'express'
 import pkg from 'whatsapp-web.js'
 import qrcode from 'qrcode-terminal'
 import qrImage from 'qrcode'
-
 import cors from 'cors'
-
 import { message } from './message.js'
-import {selectWppParametros, updateEstado, updateQrCode} from "../models/wpp_parametros.js";
-import * as path from "node:path";
-import * as fs from "node:fs";
-import {initialize} from "../configuration/database/database_methods.js";
+import { selectWppParametros, updateEstado, updateQrCode } from '../models/wpp_parametros.js'
+import * as path from 'node:path'
+import * as fs from 'node:fs'
+import { initialize } from '../configuration/database/database_methods.js'
 const { LocalAuth, Client } = pkg
 
 const app = express()
@@ -19,9 +17,9 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cors())
 app.use(express.json({}))
 
-// Objeto para almacenar los clientes
 let clients = {}
-const SESSION_PATH = path.join(process.cwd(), '.wwebjs_auth') // Ruta de sesiones
+const SESSION_PATH = path.join(process.cwd(), '.wwebjs_auth')
+const MAX_QR_ATTEMPTS = 5
 
 function stopClients() {
   Object.values(clients).forEach(async (client) => {
@@ -36,9 +34,9 @@ function stopClients() {
 
 async function rebootClients() {
   console.log('🔄 Iniciando REBOOT de clientes...')
-  await stopClients() // Detener clientes
-  deleteSessionFolder() // Borrar sesiones
-  await initializeClients() // Reiniciar clientes
+  await stopClients()
+  deleteSessionFolder()
+  await initializeClients()
   console.log('🚀 Reboot completado.')
 }
 
@@ -53,12 +51,16 @@ function deleteSessionFolder() {
   }
 }
 
-// Elimina la carpeta de una sesión específica
-function deleteSession(clientId) {
+async function deleteSession(clientId) {
   const sessionDir = path.join(SESSION_PATH, `session-${clientId}`)
   try {
+    if (clients[clientId]) {
+      await clients[clientId].destroy();
+      delete clients[clientId];
+    }
+
     if (fs.existsSync(sessionDir)) {
-      fs.rmSync(sessionDir, { recursive: true, force: true })
+      fs.rmSync(sessionDir, {recursive: true, force: true})
       console.log(`🗑️ Sesión eliminada: ${clientId}`)
     }
   } catch (error) {
@@ -66,31 +68,35 @@ function deleteSession(clientId) {
   }
 }
 
-// Manejo de desconexión de un cliente
 async function handleClientDisconnected(clientId) {
-  console.log(`⚠️ Cliente desconectado: ${clientId}`)
-  deleteSession(clientId)
-  delete clients[clientId] // Elimina la referencia del cliente en memoria
-  await initializeClients()
-}
+  try {
+    console.log(`⚠️ Cliente desconectado: ${clientId}`);
+    await deleteSession(clientId);
+    delete clients[clientId];
 
+    // Agregar un pequeño retraso antes de reiniciar la sesión
+    setTimeout(async () => {
+      await initializeClients();
+    }, 5000);
+  } catch (error) {
+    console.error(`❌ Error al manejar la desconexión de ${clientId}:`, error);
+  }
+}
 
 async function initializeClients() {
   try {
-    const clientes = await selectWppParametros() // Llamamos a selectClientes()
+    const clientes = await selectWppParametros()
 
     if (!clientes || clientes.length === 0) {
       console.log('⚠️ No hay clientes activos en la base de datos')
       return
     }
-
-    // Detener y limpiar clientes anteriores
     stopClients()
-    clients = {} // Resetear el objeto de clientes
+    clients = {}
 
-    // Crear clientes dinámicamente
     clientes.forEach((cliente) => {
       const clientId = cliente.ID
+      let qrAttempts = 0
 
       clients[clientId] = new Client({
         authStrategy: new LocalAuth({ clientId }),
@@ -98,11 +104,17 @@ async function initializeClients() {
       })
 
       clients[clientId].on('qr', async (qr) => {
+        if (qrAttempts >= MAX_QR_ATTEMPTS) {
+          console.log(`❌ Máximo de intentos de QR alcanzado para el cliente ${clientId}`)
+          await updateEstado(3, `MAX_QR_ATTEMPTS_REACHED`, clientId)
+          return
+        }
+        qrAttempts++
         console.log(`Escanea este QR con tu WhatsApp (${cliente.TELEFONO} - ${clientId}):`)
+        qrcode.generate(qr, { small: true })
         const qrBuffer = await qrImage.toBuffer(qr)
         await updateEstado(0, `ESPERANDO QR`, clientId)
         await updateQrCode(qrBuffer, clientId)
-        qrcode.generate(qr, {small: true})
       })
 
       clients[clientId].on('ready', async () => {
@@ -110,14 +122,18 @@ async function initializeClients() {
         await updateEstado(1, `LISTO`, clientId)
       })
 
-
       clients[clientId].on('disconnected', async (reason) => {
         console.log(`❌ Cliente desconectado (${clientId}): ${reason}`)
         await updateEstado(3, `DESCONECTADO, ${reason}`, clientId)
-        handleClientDisconnected(clientId) // Manejar la desconexión
+        await handleClientDisconnected(clientId)
       })
 
-      clients[clientId].initialize()
+      try {
+        clients[clientId].initialize()
+      } catch (error) {
+        console.error(`❌ Error iniciando cliente ${clientId}:`, error)
+        handleClientDisconnected(clientId)
+      }
     })
   } catch (error) {
     console.error('Error inicializando clientes:', error)
@@ -134,17 +150,6 @@ app.get(`/${address}/reboot`, async (req, res) => {
   res.json({ message: 'Reboot completado: sesiones eliminadas y clientes reiniciados' })
 })
 
-// Iniciar clientes
-Object.values(clients).forEach(client => {
-  client.on('qr', (qr) =>{
-    console.log(`Escanea este QR con tu WhatsApp  ${client.authStrategy.clientId}!:`)
-    qrcode.generate(qr, { small: true })
-    console.log('\n\n\n\n\n')
-  });
-  client.on('ready', () => console.log(`Cliente listo: ${client.authStrategy.clientId}`));
-  client.initialize();
-});
-
 app.use(`/${address}/message`, message)
 
 app.listen(port, () => {
@@ -153,5 +158,4 @@ app.listen(port, () => {
 
 initialize().then(() => initializeClients())
 
-// export client
 export { clients }

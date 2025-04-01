@@ -20,7 +20,7 @@
     "qrcode": "^1.5.4",
     "qrcode-terminal": "^0.12.0",
     "standard": "^17.1.2",
-    "whatsapp-web.js": "^1.26.0"
+    "whatsapp-web.js": "^1.27.0"
   },
   "eslintConfig": {
     "extends": "./node_modules/standard/eslintrc.json"
