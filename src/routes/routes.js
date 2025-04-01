@@ -89,7 +89,7 @@ async function initializeClients() {
     clients = {} // Resetear el objeto de clientes
 
     // Crear clientes dinámicamente
-    clientes.forEach((cliente, index) => {
+    clientes.forEach((cliente) => {
       const clientId = cliente.ID
 
       clients[clientId] = new Client({
@@ -124,7 +124,6 @@ async function initializeClients() {
   }
 }
 
-
 app.get(`/${address}/reload-clients`, async (req, res) => {
   await initializeClients()
   res.json({ message: 'Clientes recargados desde la BD' })
@@ -134,7 +133,6 @@ app.get(`/${address}/reboot`, async (req, res) => {
   await rebootClients()
   res.json({ message: 'Reboot completado: sesiones eliminadas y clientes reiniciados' })
 })
-
 
 // Iniciar clientes
 Object.values(clients).forEach(client => {
@@ -147,11 +145,8 @@ Object.values(clients).forEach(client => {
   client.initialize();
 });
 
-
-
 app.use(`/${address}/message`, message)
 
-// Inicia el servidor Express
 app.listen(port, () => {
   console.log(`🚀 Servidor escuchando en http://localhost:${port}, address: ${address}`)
 })

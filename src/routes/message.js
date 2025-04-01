@@ -9,6 +9,6 @@ message.get('/send-message', async (req, res) => {
 })
 
 // Ruta para enviar un archivo
-message.get('/send-file', async (req, res) => {
+message.get('/send', async (req, res) => {
   await sendFile(req, res)
 })
