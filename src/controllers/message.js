@@ -5,6 +5,7 @@ import pkg from 'whatsapp-web.js'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import { getClientById } from '../utils.js'
+import {validateEcuadorianPhoneNumber} from "../utils/validate_number.js";
 const { MessageMedia } = pkg
 
 export const sendFile = async (req, res) => {
@@ -24,8 +25,11 @@ export const sendFile = async (req, res) => {
   }
 
   try {
+    // Validar que el número de teléfono tenga el formato correcto
+    const numberEcuador = validateEcuadorianPhoneNumber(phone)
+
     // WhatsApp requiere el formato internacional con el código de país sin "+"
-    const formattedNumber = phone.includes('@c.us') ? phone : `593${phone}@c.us`
+    const formattedNumber = numberEcuador.includes('@c.us') ? numberEcuador : `593${phone}@c.us`
 
     // Obtener la ruta del archivo
     const __filename = fileURLToPath(import.meta.url)
@@ -58,7 +62,7 @@ export const sendFile = async (req, res) => {
     const fileBase64 = fileBuffer.toString('base64')
 
     // Crear el objeto de media para WhatsApp
-    const media = new MessageMedia(fileType, fileBase64, 'test2.pdf')
+    const media = new MessageMedia(fileType, fileBase64)
 
     console.log('✅ Archivo cargado correctamente:', filePath)
 

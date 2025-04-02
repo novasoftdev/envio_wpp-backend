@@ -106,6 +106,7 @@ async function initializeClients() {
       clients[clientId].on('qr', async (qr) => {
         if (qrAttempts >= MAX_QR_ATTEMPTS) {
           console.log(`❌ Máximo de intentos de QR alcanzado para el cliente ${clientId}`)
+          delete clients[clientId]
           await updateEstado(3, `MAX_QR_ATTEMPTS_REACHED`, clientId)
           return
         }
