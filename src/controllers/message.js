@@ -5,7 +5,7 @@ import pkg from 'whatsapp-web.js'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import { getClientById } from '../utils.js'
-import {validateEcuadorianPhoneNumber} from "../utils/validate_number.js";
+import { validateEcuadorianPhoneNumber } from '../utils/validate_number.js'
 const { MessageMedia } = pkg
 
 export const sendFile = async (req, res) => {
