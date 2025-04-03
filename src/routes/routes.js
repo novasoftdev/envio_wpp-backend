@@ -105,18 +105,26 @@ async function initializeClients() {
 
       clients[clientId].on('qr', async (qr) => {
         if (qrAttempts >= MAX_QR_ATTEMPTS) {
-          console.log(`❌ Máximo de intentos de QR alcanzado para el cliente ${clientId}`)
-          delete clients[clientId]
-          await updateEstado(3, `MAX_QR_ATTEMPTS_REACHED`, clientId)
-          return
+          console.log(`❌ Máximo de intentos de QR alcanzado para el cliente ${clientId}`);
+
+          // Asegurarse de destruir el cliente antes de eliminarlo
+          if (clients[clientId]) {
+            await clients[clientId].destroy().catch(err => console.error(`Error destruyendo cliente ${clientId}:`, err));
+            delete clients[clientId];
+          }
+
+          await updateEstado(3, "MAX_QR_ATTEMPTS_REACHED", clientId);
+          return;
         }
-        qrAttempts++
-        console.log(`Escanea este QR con tu WhatsApp (${cliente.TELEFONO} - ${clientId}):`)
-        qrcode.generate(qr, { small: true })
-        const qrBuffer = await qrImage.toBuffer(qr)
-        await updateEstado(0, `ESPERANDO QR`, clientId)
-        await updateQrCode(qrBuffer, clientId)
-      })
+
+        qrAttempts++;
+        console.log(`Escanea este QR con tu WhatsApp (${cliente.TELEFONO} - ${clientId}):`);
+        qrcode.generate(qr, { small: true });
+
+        const qrBuffer = await qrImage.toBuffer(qr);
+        await updateEstado(0, "ESPERANDO_QR", clientId);
+        await updateQrCode(qrBuffer, clientId);
+      });
 
       clients[clientId].on('ready', async () => {
         console.log(`✅ Cliente listo: ${cliente.TELEFONO} (${clientId})`)
